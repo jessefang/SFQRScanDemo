@@ -10,7 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "ScanView.h"
 
-@interface ScanViewController ()<AVCaptureMetadataOutputObjectsDelegate>
+@interface ScanViewController ()<AVCaptureMetadataOutputObjectsDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
 @property (strong, nonatomic)AVCaptureVideoPreviewLayer *previewLayer;
 @property (nonatomic,strong) AVCaptureSession *captureSession;
 @property (nonatomic,strong) AVCaptureDevice *avDevice;
@@ -56,9 +56,19 @@
     
     UIButton *popBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     popBtn.frame = CGRectMake(0, 27, 50, 30);
-    [popBtn setImage:[UIImage imageNamed:@"navigation_arrow"] forState:UIControlStateNormal];
+    [popBtn setBackgroundColor:[UIColor clearColor]];
+    [popBtn setTitle:@"返回" forState:UIControlStateNormal];
+    [popBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [popBtn addTarget:self action:@selector(popViewController) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:popBtn];
+    
+    UIButton *albumBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+    albumBtn.frame = CGRectMake(self.view.frame.size.width - 50, 27, 50, 30);
+    [albumBtn setBackgroundColor:[UIColor clearColor]];
+    [albumBtn setTitle:@"相册" forState:UIControlStateNormal];
+    [albumBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [albumBtn addTarget:self action:@selector(openAlbum) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:albumBtn];
     
     //添加扫描区域
     CGFloat screenHeight = self.view.frame.size.height;
@@ -78,6 +88,50 @@
     [super viewWillAppear:animated];
     self.navigationController.navigationBar.hidden = YES;
 }
+
+- (void)openAlbum{
+    if ([self isPhotoLibraryAvailable]) {
+        UIImagePickerController *controller = [[UIImagePickerController alloc]init];
+        controller.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+        controller.delegate = self;
+        [self presentViewController:controller animated:YES completion:^{
+            NSLog(@"Picker View Controller is presented");
+        }];
+    }else{
+        NSLog(@"设备不支持打开相册");
+    }
+}
+
+- (BOOL)isPhotoLibraryAvailable{
+    return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary];
+}
+
+#pragma mark - UImagePicker Delegate
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
+    NSLog(@"cancel");
+    
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    __block UIImage *image = [info objectForKey:UIImagePickerControllerEditedImage];
+    if (!image) {
+        image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    }
+    CIDetector *detector = [CIDetector detectorOfType:CIDetectorTypeQRCode context:nil options:@{ CIDetectorAccuracy : CIDetectorAccuracyHigh }];
+    NSArray *features = [detector featuresInImage:[CIImage imageWithCGImage:image.CGImage]];
+    if (features.count >=1){
+        CIQRCodeFeature *feature = [features objectAtIndex:0];
+        NSString *scanResult = feature.messageString;
+        
+        NSLog(@"capture content:%@",scanResult);
+    }else{
+        NSLog(@"capture failed");
+    }
+}
+
+
 #pragma mark - AVCaptureMetadataOutputObjectsDelegate
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection{
     NSString *string;

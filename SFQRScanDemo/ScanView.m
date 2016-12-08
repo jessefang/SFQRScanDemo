@@ -64,7 +64,7 @@ static const NSTimeInterval ScanLineAnimateDuration = 0.03;
 }
 
 - (void)screenFillRectWithCRef:(CGContextRef)cRef rect:(CGRect)rect{
-    CGContextSetRGBFillColor(cRef, 35 / 255.0, 35 / 255.0, 35 / 255.0, 0.5);
+    CGContextSetRGBFillColor(cRef, 25 / 255.0, 25 / 255.0, 25 / 255.0, 0.5);
     CGContextFillRect(cRef, rect);
 }
 
