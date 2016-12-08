@@ -3,8 +3,8 @@
 
 #usage下载
 项目项目并导入
-    
-    #import ScanViewController 
+
+    #import ScanViewController 
     
 注：相册里的二维码需iOS8+才可以支持  
 
