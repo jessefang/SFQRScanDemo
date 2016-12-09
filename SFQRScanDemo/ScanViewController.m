@@ -16,6 +16,8 @@
 @property (nonatomic,strong) AVCaptureDevice *avDevice;
 @property (nonatomic,strong) AVCaptureDeviceInput *input;
 @property (nonatomic,strong) AVCaptureMetadataOutput *output;
+@property (nonatomic, strong)ScanView *scanView;
+
 @end
 
 @implementation ScanViewController
@@ -46,13 +48,9 @@
     [self.view.layer insertSublayer:self.previewLayer atIndex:0];
     [self.captureSession startRunning];
     
-    CGRect screenRect = [UIScreen mainScreen].bounds;
-    
-    ScanView *scanView = [[ScanView alloc]initWithFrame:screenRect];
-    scanView.scanArea = CGSizeMake(200, 200);
-    scanView.backgroundColor = [UIColor clearColor];
-    scanView.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
-    [self.view addSubview:scanView];
+    self.scanView.scanArea = CGSizeMake(200, 200);
+    self.scanView.scanCornerColor = [UIColor colorWithRed:128 / 255.0 green:255 / 255.0 blue:0 / 255.0 alpha:1];;
+    [self.view addSubview:self.scanView];
     
     UIButton *popBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     popBtn.frame = CGRectMake(0, 27, 50, 30);
@@ -73,15 +71,19 @@
     //添加扫描区域
     CGFloat screenHeight = self.view.frame.size.height;
     CGFloat screenWidth = self.view.frame.size.width;
-    CGRect scanRect = CGRectMake((screenWidth - scanView.scanArea.width) / 2, (screenHeight - scanView.scanArea.height) / 2, scanView.scanArea.width, scanView.scanArea.height);
+    CGRect scanRect = CGRectMake((screenWidth - self.scanView.scanArea.width) / 2, (screenHeight - self.scanView.scanArea.height) / 2, self.scanView.scanArea.width, self.scanView.scanArea.height);
     [self.output setRectOfInterest:CGRectMake(scanRect.origin.y / screenHeight, scanRect.origin.x / screenWidth, scanRect.size.height / screenHeight, scanRect.size.width / screenWidth)];
     
-    UILabel *informLable = [[UILabel alloc]initWithFrame:CGRectMake(0, (screenHeight - scanView.scanArea.height) / 2 + scanView.scanArea.height, screenWidth, 40)];
+    UILabel *informLable = [[UILabel alloc]initWithFrame:CGRectMake(0, (screenHeight - self.scanView.scanArea.height) / 2 + self.scanView.scanArea.height, screenWidth, 40)];
     informLable.font = [UIFont systemFontOfSize:13];
     informLable.text = @"请将二维码/条码放进扫框内，即可自动扫描";
     informLable.textColor = [UIColor whiteColor];
     informLable.textAlignment = NSTextAlignmentCenter;
     [self.view addSubview:informLable];
+}
+
+- (void)scanComplete:(scanCompleteBlock)completeBlock{
+    self.scanCompleteBlock = completeBlock;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -124,11 +126,16 @@
     if (features.count >=1){
         CIQRCodeFeature *feature = [features objectAtIndex:0];
         NSString *scanResult = feature.messageString;
-        
-        NSLog(@"capture content:%@",scanResult);
+        if (self.scanCompleteBlock) {
+            self.scanCompleteBlock(scanResult);
+        }
     }else{
-        NSLog(@"capture failed");
+        if (self.scanCompleteBlock) {
+            self.scanCompleteBlock(@"capture failed");
+        }
     }
+    [self popViewController];
+
 }
 
 
@@ -139,11 +146,38 @@
         [self.captureSession stopRunning];
         AVMetadataMachineReadableCodeObject *metadataObj = [metadataObjects objectAtIndex:0];
         string = metadataObj.stringValue;
-        NSLog(@"capture content:%@",string);
+        if (self.scanCompleteBlock) {
+            self.scanCompleteBlock(string);
+        }
+    }else{
+        if (self.scanCompleteBlock) {
+            self.scanCompleteBlock(@"capture failed");
+        }
     }
+    [self popViewController];
 }
+
 - (void)popViewController{
     [self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - initialize & set,get method
+- (ScanView *)scanView{
+    if (!_scanView) {
+        _scanView = [[ScanView alloc]initWithFrame:[UIScreen mainScreen].bounds];
+        _scanView.backgroundColor = [UIColor clearColor];
+        _scanView.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
+    }
+    return _scanView;
+}
+
+- (void)setScanAreaSize:(CGSize)scanAreaSize{
+    _scanAreaSize = scanAreaSize;
+    self.scanView.scanArea = _scanAreaSize;
+}
+
+- (void)setScanAreaCornerColor:(UIColor *)scanAreaCornerColor{
+    _scanAreaCornerColor = scanAreaCornerColor;
+    self.scanView.scanCornerColor = _scanAreaCornerColor;
 }
 
 - (void)didReceiveMemoryWarning {

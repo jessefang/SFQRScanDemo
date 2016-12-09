@@ -83,7 +83,10 @@ static const NSTimeInterval ScanLineAnimateDuration = 0.03;
 - (void)addRightAngleLineWithCRef:(CGContextRef)cRef rect:(CGRect)rect{
     //设置颜色及线宽
     CGContextSetLineWidth(cRef, 2);
-    CGContextSetRGBStrokeColor(cRef, 128 / 255.0, 255 / 255.0, 0 / 255.0, 1);
+    CGFloat components[4];
+    [self getRGBComponents:components forColor:self.scanCornerColor];
+    
+    CGContextSetRGBStrokeColor(cRef, components[0], components[1], components[2], 1);
     //左上角
     CGPoint topLeftAngleA[] = {
         CGPointMake(rect.origin.x + 0.7, rect.origin.y),
@@ -131,9 +134,40 @@ static const NSTimeInterval ScanLineAnimateDuration = 0.03;
     CGContextStrokePath(cRef);
 }
 
+- (void)getRGBComponents:(CGFloat [3])components forColor:(UIColor *)color {
+    CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
+    unsigned char resultingPixel[4];
+    CGContextRef context = CGBitmapContextCreate(&resultingPixel,
+                                                 1,
+                                                 1,
+                                                 8,
+                                                 4,
+                                                 rgbColorSpace,
+                                                 (CGBitmapInfo)kCGImageAlphaNoneSkipLast);
+    
+    CGContextSetFillColorWithColor(context, [color CGColor]);
+    CGContextFillRect(context, CGRectMake(0, 0, 1, 1));
+    CGContextRelease(context);
+    CGColorSpaceRelease(rgbColorSpace);
+    for (int component = 0; component < 4; component++) {
+        components[component] = resultingPixel[component] / 255.0f;
+    }
+}
+
 - (void)addLineFromPointA:(CGPoint[])pointA toPointB:(CGPoint[])pointB withCref:(CGContextRef)cRef{
     CGContextAddLines(cRef, pointA, 2);
     CGContextAddLines(cRef, pointB, 2);
+}
+
+#pragma mark - set,get method
+- (void)setScanArea:(CGSize)scanArea{
+    _scanArea = scanArea;
+    [self setNeedsDisplay];
+}
+
+- (void)setScanCornerColor:(UIColor *)scanCornerColor{
+    _scanCornerColor = scanCornerColor;
+    [self setNeedsDisplay];
 }
 /*
 // Only override drawRect: if you perform custom drawing.

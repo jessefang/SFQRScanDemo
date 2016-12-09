@@ -7,7 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+typedef void (^scanCompleteBlock)(NSString *);
 
 @interface ScanViewController : UIViewController
+@property (nonatomic, copy)scanCompleteBlock scanCompleteBlock;
+@property (nonatomic, assign)CGSize scanAreaSize;
+@property (nonatomic, strong)UIColor *scanAreaCornerColor;
 
+- (void)scanComplete:(scanCompleteBlock)completeBlock;
 @end

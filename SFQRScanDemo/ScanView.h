@@ -11,5 +11,6 @@
 @interface ScanView : UIView
 
 @property (assign, nonatomic)CGSize scanArea;
+@property (strong, nonatomic)UIColor *scanCornerColor;
 
 @end

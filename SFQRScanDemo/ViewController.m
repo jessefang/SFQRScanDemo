@@ -27,6 +27,11 @@
 
 - (void)scanCode{
     ScanViewController *scanVc = [[ScanViewController alloc]init];
+//    scanVc.scanAreaSize = CGSizeMake(300, 300);
+//    scanVc.scanAreaCornerColor = [UIColor redColor];
+    [scanVc scanComplete:^(NSString *scanResult) {
+        NSLog(@"%@",scanResult);
+    }];
     
     [self.navigationController pushViewController:scanVc animated:YES];
 }
