@@ -1,9 +1,9 @@
 # SFQRScanDemo
 使用AVFoundation完成的二维码扫描扫
 
-#usage下载
+#usage
 
-项目项目并导入
+下载项目并导入
 
 `#import "ScanViewController"` 
 
