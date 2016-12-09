@@ -8,7 +8,6 @@
     #import "ScanViewController" 
     
 注：扫描相册里的二维码需iOS8+才可以支持  
-
 初始化
 
     ScanViewController *scanVc = [[ScanViewController alloc]init];
